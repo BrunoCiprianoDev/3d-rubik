@@ -1,89 +1,174 @@
-// Importa o núcleo do Three.js como o objeto 'THREE'
 import * as THREE from 'three';
-// Importa o carregador específico para arquivos .gltf e .glb
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-// Importa o controle que permite orbitar a câmera com o mouse/touch
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// --- CONFIGURAÇÃO DA CENA ---
-
-// Cria o "universo" onde todos os objetos, luzes e câmeras serão colocados
-const scene = new THREE.Scene();
-// Define a cor de fundo da cena (cinza bem claro neste caso)
-scene.background = new THREE.Color(0xeeeeee);
-
-// --- CÂMERA ---
-
-// Cria uma câmera de perspectiva (objetos distantes parecem menores)
-// Parâmetros: (Campo de Visão, Proporção da Tela, Corte Próximo, Corte Distante)
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-// Posiciona a câmera nos eixos X=0, Y=1 (um pouco para cima), Z=5 (afastada do centro)
-camera.position.set(0, 1, 5);
-
-// --- RENDERIZADOR ---
-
-// Seleciona o elemento <canvas> do HTML onde o desenho será feito
-const canvas = document.querySelector('#three-canvas');
-// Cria o renderizador WebGL, ativando o 'antialias' para suavizar bordas serrilhadas
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-// Define o tamanho da área de renderização para preencher toda a janela
-renderer.setSize(window.innerWidth, window.innerHeight);
-// Ajusta a resolução para telas de alta densidade (como Retina), evitando borrões
-renderer.setPixelRatio(window.devicePixelRatio);
-
-// --- ILUMINAÇÃO ---
-
-// Cria uma luz direcional (como o Sol) com cor branca e intensidade máxima (1)
-const light = new THREE.DirectionalLight(0xffffff, 1);
-// Posiciona a fonte de luz no espaço
-light.position.set(5, 5, 5);
-// Adiciona a luz solar à cena
-scene.add(light);
-// Adiciona uma luz ambiente (suave) para que as sombras não fiquem totalmente pretas
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-// --- INTERATIVIDADE ---
-
-// Habilita o controle de órbita, vinculando-o à câmera e ao elemento do canvas
-const controls = new OrbitControls(camera, renderer.domElement);
-
-// --- CARREGAMENTO DO MODELO ---
-
-// Instancia o carregador de arquivos GLB
-const loader = new GLTFLoader();
-// Tenta carregar o arquivo 'model.glb'
-loader.load('model.glb', (gltf) => {
-    // Se carregar com sucesso, adiciona o objeto extraído do arquivo à nossa cena
-    scene.add(gltf.scene);
-    console.log("Modelo carregado com sucesso!");
-}, undefined, (error) => {
-    // Caso ocorra algum erro (como arquivo não encontrado), exibe no console
-    console.error("Erro ao carregar o modelo:", error);
-});
-
-// --- LOOP DE RENDERIZAÇÃO ---
-
-// Função que será executada repetidamente para atualizar a imagem na tela
-function animate() {
-    // Pede ao navegador para chamar a função 'animate' novamente na próxima atualização de quadro (frame)
-    requestAnimationFrame(animate);
-    // Atualiza os controles do mouse (necessário para suavizar o movimento da câmera)
-    controls.update();
-    // Desenha efetivamente a cena sob o ponto de vista da câmera selecionada
-    renderer.render(scene, camera);
+// --- CLASSE DA PEÇA ---
+export class Piece {
+    constructor(model, x, y, z) {
+        this.model = model;
+        this.initial_position = { x, y, z };
+        this.current_position = { x, y, z };
+    }
 }
 
-// --- AJUSTE DINÂMICO (RESPONSIVO) ---
+// --- CONFIGURAÇÃO DA CENA ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xeeeeee);
 
-// Escuta se o usuário redimensionou a janela do navegador
-window.addEventListener('resize', () => {
-    // Atualiza a proporção da câmera para não achatar a imagem
-    camera.aspect = window.innerWidth / window.innerHeight;
-    // Avisa a câmera que os parâmetros mudaram
-    camera.updateProjectionMatrix();
-    // Ajusta o tamanho do renderizador para as novas dimensões da janela
-    renderer.setSize(window.innerWidth, window.innerHeight);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(5, 5, 10);
+
+const canvas = document.querySelector('#three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+
+// --- ILUMINAÇÃO ---
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5, 5, 5);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+// --- ESTADOS E VARIÁVEIS DO JOGO ---
+const cubies = [];
+let isRotating = false;
+let isDragging = false;
+let selectedCubie = null;
+let clickNormal = null;
+let startMousePos = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let offset = 0; // Será definido após o carregamento
+
+// Pivot central para rotações de camada
+const pivot = new THREE.Object3D();
+scene.add(pivot);
+
+// --- CARREGAMENTO DO MODELO ---
+const loader = new GLTFLoader();
+loader.load('model.glb', (gltf) => {
+    const baseModel = gltf.scene;
+    const bbox = new THREE.Box3().setFromObject(baseModel);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+
+    const pieceSize = size.x;
+    const margin = -0.05;
+    offset = pieceSize + margin;
+
+    for (let x = -1; x <= 1; x++) {
+        for (let y = -1; y <= 1; y++) {
+            for (let z = -1; z <= 1; z++) {
+                if (x === 0 && y === 0 && z === 0) continue;
+
+                const modelClone = baseModel.clone();
+                modelClone.position.set(x * offset, y * offset, z * offset);
+
+                const piece = new Piece(modelClone, x, y, z);
+                scene.add(piece.model);
+                cubies.push(piece);
+            }
+        }
+    }
+
+        console.log(cubies.filter(c => c.current_position.y === 1 ));
+});
+ 
+// --- FUNÇÕES DE ROTAÇÃO MANUAL (TECLADO) ---
+
+function rotateLayer(layerCubies, clockwise = true) {
+    if (isRotating || offset === 0) return;
+    isRotating = true;
+
+    // 2. SETUP PIVOT
+    pivot.rotation.set(0, 0, 0);
+    pivot.updateMatrixWorld();
+    layerCubies.forEach(c => pivot.attach(c.model));
+
+    // 3. DEFINIÇÃO DE SENTIDO
+    // Se clockwise for true, gira -90 graus. Se false (anti-horário), gira 90 graus.
+    const direction = clockwise ? -1 : 1;
+    const targetRad = (Math.PI / 2) * direction;
+    const speed = 0.05 * direction;
+    let currentRad = 0;
+
+    function animate() {
+        currentRad += speed;
+
+        // Usamos Math.abs para a condição de parada funcionar em ambos os sentidos
+        if (Math.abs(currentRad) >= Math.PI / 2) {
+            pivot.rotation.x = targetRad;
+            pivot.updateMatrixWorld();
+
+            // 4. LIMPEZA E ARREDONDAMENTO
+            layerCubies.forEach(c => {
+                scene.attach(c.model);
+
+                // Mantém as peças perfeitamente alinhadas na grade
+                c.model.position.set(
+                    Math.round(c.model.position.x / offset) * offset,
+                    Math.round(c.model.position.y / offset) * offset,
+                    Math.round(c.model.position.z / offset) * offset
+                );
+
+                // Corrige a rotação para o ângulo reto mais próximo
+                c.model.rotation.set(
+                    Math.round(c.model.rotation.x / (Math.PI / 2)) * (Math.PI / 2),
+                    Math.round(c.model.rotation.y / (Math.PI / 2)) * (Math.PI / 2),
+                    Math.round(c.model.rotation.z / (Math.PI / 2)) * (Math.PI / 2)
+                );
+            });
+
+            isRotating = false;
+        } else {
+            pivot.rotation.x += speed;
+            requestAnimationFrame(animate);
+        }
+    }
+
+    animate();
+}
+
+// --- EVENTO DE TECLADO ---
+
+window.addEventListener('keydown', (event) => {
+
+    // Eixo Y (Camadas Horizontais)
+    const topCubies = cubies.filter(c => c.current_position.y === 0 );      // Superior (Cima)
+    const midHorizCubies = cubies.filter(c => c.current_position.y === -1 ); // Meio Horizontal
+    const bottomCubies = cubies.filter(c => c.current_position.y === -1 );     // Inferior (Baixo)
+
+    // Eixo X (Camadas Verticais Laterais)
+    const rightCubies = cubies.filter(c => c.current_position.x === 0 );      // Direita
+    const midVertLatCubies = cubies.filter(c => c.current_position.x === -1 ); // Meio Vertical (Lateral)
+    const leftCubies = cubies.filter(c => c.current_position.x === 1 );     // Esquerda
+
+    // Eixo Z (Camadas de Profundidade)
+    const frontCubies = cubies.filter(c => c.current_position.z === 0 );      // Frontal (Frente)
+    const midDepthCubies = cubies.filter(c => c.current_position.z === -1 );  // Meio Vertical (Profundidade)
+    const backCubies = cubies.filter(c => c.current_position.z === 1 );     // Traseira (Trás)
+
+
+    if (isRotating) return;
+
+    if (event.key === "ArrowDown") {
+        console.log("Seta para baixo: Camada Inferior (Horário)");
+        rotateLayer(leftCubies, true);
+    }
+
+    if (event.key === "ArrowUp") {
+        console.log("Seta para cima: Camada Inferior (Anti-horário)");
+        rotateLayer(midVertLatCubies, false);
+    }
 });
 
-// Inicia o loop de animação pela primeira vez
+
+// --- RENDER LOOP ---
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
 animate();
