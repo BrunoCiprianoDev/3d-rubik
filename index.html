@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Three.js Model Viewer</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+    <h1 id="game-title">Rubik's Cube</h1>
+    <h5 id="instruction-title">Pressione "S" para embaralhar o Rubik</h5>
+    <div id="developer-credits">
+        Developed by <br>
+        <strong>Bruno Cipriano Ribeiro</strong> <br>
+        <a href="https://github.com/BrunoCiprianoDev" target="_blank">github.com/BrunoCiprianoDev</a>
+    </div>
     <canvas id="three-canvas"></canvas>
 
     <!-- Import Map para gerenciar as versões do Three.js -->
@@ -20,4 +29,5 @@
     </script>
     <script type="module" src="main.js"></script>
 </body>
+
 </html>

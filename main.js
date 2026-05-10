@@ -35,7 +35,10 @@ export class Piece {
     }
 }
 
+let isSolved = false;
+
 // --- ESTADOS E VARIÁVEIS DO JOGO ---
+let moveCount = -1; // Contador de movimentos, inicia em -1 para não contar o shuffle inicial
 const cubies = [];
 let isRotating = false;
 let isDragging = false;
@@ -76,12 +79,16 @@ loader.load('model.glb', (gltf) => {
             }
         }
     }
-
 });
 
-// --- FUNÇÕES DE ROTAÇÃO MANUAL (TECLADO) ---
+// --- COMPORTAMENTO DE ROTAÇÃO DAS CAMADAS ---
 
 function rotateLayer(layerCubies, clockwise = true, axis) {
+
+    if (checkSolved()) {
+        return;
+    }
+
     if (isRotating || offset === 0) return;
     isRotating = true;
 
@@ -258,6 +265,7 @@ window.addEventListener('mouseup', (event) => {
 
     // Eixo vertical (arrasto para cima ou para baixo)
     if (dragDirection === "vertical") {
+        ++moveCount;
         if (faceDirection.x === 1) {
             faceName = "Direita (v01)"
             rotationAxis = 'x';
@@ -335,9 +343,9 @@ window.addEventListener('mouseup', (event) => {
                 rotateLayer(get_cubies_right_3(), rotationOrientation, 'x');
             }
         }
-
-        // eixo horizontal (arrasto para esquerda ou direita)i
+        // eixo horizontal (arrasto para esquerda ou direita)
     } else if (dragDirection === "horizontal") {
+        ++moveCount;
         if (faceDirection.x === 1) {
             faceName = "Direita (h01)"
             rotationAxis = 'x';
@@ -416,13 +424,78 @@ window.addEventListener('mouseup', (event) => {
 
     // Reativa os controles de órbita após a rotação
     controls.enabled = true;
-
     // Debug:
     console.log(faceName);
     console.log("Face direction:", faceDirection);
     console.log("Posição da peça selecionada:", selectedPiece.current_position);
 
 });
+
+function shuffleCube(moves = 20) {
+    if (isRotating) return; // Não embaralha se já estiver girando
+
+    let count = 0;
+
+    // Desativamos temporariamente o checkSolved para não dar alerta durante o shuffle
+    const tempCheckSolved = checkSolved;
+    window.checkSolved = () => false;
+
+    const axes = ['x', 'y', 'z'];
+    const layers = [-1, 0, 1];
+
+    const interval = setInterval(() => {
+        const randomAxis = axes[Math.floor(Math.random() * axes.length)];
+        const randomLayerIndex = layers[Math.floor(Math.random() * layers.length)];
+        const randomDirection = Math.random() > 0.5;
+
+        // Seleciona as peças da camada baseada no eixo sorteado
+        let layerToRotate;
+        if (randomAxis === 'x') {
+            layerToRotate = cubies.filter(c => c.current_position.x === randomLayerIndex);
+        } else if (randomAxis === 'y') {
+            layerToRotate = cubies.filter(c => c.current_position.y === randomLayerIndex);
+        } else {
+            layerToRotate = cubies.filter(c => c.current_position.z === randomLayerIndex);
+        }
+
+        rotateLayer(layerToRotate, randomDirection, randomAxis);
+
+        count++;
+        if (count >= moves) {
+            clearInterval(interval);
+            // Restaura o contador de movimentos após embaralhar
+            setTimeout(() => {
+                moveCount = 0;
+                window.checkSolved = tempCheckSolved; // Restaura a função original
+            }, 500);
+        }
+    }, 150); // Intervalo entre giros para a animação processar
+}
+
+window.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 's') {
+        shuffleCube(20); // Embaralha com 20 movimentos
+    }
+});
+
+
+function checkSolved() {
+
+    isSolved = cubies.every(piece => {
+        return Math.round(piece.initial_position.x) === Math.round(piece.current_position.x) &&
+            Math.round(piece.initial_position.y) === Math.round(piece.current_position.y) &&
+            Math.round(piece.initial_position.z) === Math.round(piece.current_position.z);
+    });
+
+    if (isSolved && moveCount > 1) {
+        alert("Parabéns! Você resolveu o cubo em " + moveCount + " movimentos!");
+        moveCount = 0; // Reseta a contagem de movimentos para a próxima vez que o cubo for resolvido
+        isSolved = false; // Reseta o estado de resolvido para permitir novas tentativas
+        return true;
+    }
+
+    return false;
+}
 
 // --- RENDER LOOP ---
 function animate() {
