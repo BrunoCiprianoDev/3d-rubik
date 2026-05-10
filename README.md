@@ -35,3 +35,5 @@ The project uses a 3D model configured with standard Rubik’s Cube colors and r
 ## 👨‍💻 Developer
 
 Project developed by **Bruno Cipriano Ribeiro**.
+
+LINKZIM
