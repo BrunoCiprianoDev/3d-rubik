@@ -36,12 +36,11 @@ body { margin: 0; overflow: hidden; }
     bottom: 20px;
     right: 20px;
     text-align: right;
-    color: rgba(255, 255, 255, 0.6); /* Cor suave para não distrair */
+    color: rgba(255, 255, 255, 0.6); 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 12px;
     line-height: 1.6;
     z-index: 100;
-    /* Aqui NÃO usamos pointer-events: none para o link funcionar */
 }
 
 #developer-credits strong {
@@ -51,7 +50,7 @@ body { margin: 0; overflow: hidden; }
 }
 
 #developer-credits a {
-    color: #4a9eff; /* Um azul suave para o link */
+    color: #4a9eff; 
     text-decoration: none;
     transition: color 0.3s ease;
 }
