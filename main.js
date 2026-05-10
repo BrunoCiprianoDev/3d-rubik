@@ -135,229 +135,6 @@ function rotateLayer(layerCubies, clockwise = true, axis) {
     animate();
 }
 
-// // --- EVENTO DE TECLADO ---
-
-// window.addEventListener('keydown', (event) => {
-
-//     // Eixo Y (Camadas Horizontais)
-//     const topCubies = cubies.filter(c => c.current_position.y === 0);      // Superior (Cima)
-//     const midHorizCubies = cubies.filter(c => c.current_position.y === -1); // Meio Horizontal
-//     const bottomCubies = cubies.filter(c => c.current_position.y === 1);     // Inferior (Baixo)
-
-//     // Eixo X (Camadas Verticais Laterais)
-//     const rightCubies = cubies.filter(c => c.current_position.x === 0);      // Direita
-//     const midVertLatCubies = cubies.filter(c => c.current_position.x === -1); // Meio Vertical (Lateral)
-//     const leftCubies = cubies.filter(c => c.current_position.x === 1);     // Esquerda
-
-//     // Eixo Z (Camadas de Profundidade)
-//     const frontCubies = cubies.filter(c => c.current_position.z === 0);      // Frontal (Frente)
-//     const midDepthCubies = cubies.filter(c => c.current_position.z === -1);  // Meio Vertical (Profundidade)
-//     const backCubies = cubies.filter(c => c.current_position.z === 1);     // Traseira (Trás)
-
-
-//     if (isRotating) return;
-
-//     if (event.key === "1") {
-//         rotateLayer(topCubies, true, 'y');
-//     }
-
-//     if (event.key === "2") {
-//         rotateLayer(midHorizCubies, true, 'y');
-//     }
-
-//     if (event.key === "3") {
-//         rotateLayer(bottomCubies, true, 'y');
-//     }
-
-//     if (event.key === "4") {
-//         rotateLayer(rightCubies, true, 'x');
-//     }
-
-//     if (event.key === "5") {
-//         rotateLayer(midVertLatCubies, true, 'x');
-//     }
-
-//     if (event.key === "6") {
-//         rotateLayer(leftCubies, true, 'x');
-//     }
-
-//     if (event.key === "7") {
-//         rotateLayer(frontCubies, true, 'z');
-//     }
-
-//     if (event.key === "8") {
-//         rotateLayer(midDepthCubies, true, 'z');
-//     }
-
-//     if (event.key === "9") {
-//         rotateLayer(backCubies, true, 'z');
-//     }
-
-// });
-
-
-// let selectedPiece = null;
-// let dragDirection = ""; // Armazena "horizontal" ou "vertical"
-// let dragIntensity = 0;  // Armazena o valor bruto (positivo ou negativo) para definir o sentido
-// let mouseDownPos = new THREE.Vector2()
-// // --- No seu ouvinte de 'mousedown' ---
-// window.addEventListener('mousedown', (event) => { // Limpa a peça selecionada no início do clique
-//     //Temporaria
-//     const top_2 = cubies.filter(c => c.current_position.y === 0);      // Superior (Cima)
-//     const top_3 = cubies.filter(c => c.current_position.y === -1); // Meio Horizontal
-//     const top_1 = cubies.filter(c => c.current_position.y === 1);     // Inferior (Baixo)
-
-//     // Eixo X (Camadas Verticais Laterais)
-//     const right_2 = cubies.filter(c => c.current_position.x === 0);      // Direita
-//     const right_3 = cubies.filter(c => c.current_position.x === -1); // Meio Vertical (Lateral)
-//     const right_1 = cubies.filter(c => c.current_position.x === 1);     // Esquerda
-
-//     // Eixo Z (Camadas de Profundidade)
-//     const front_2 = cubies.filter(c => c.current_position.z === 0);      // Frontal (Frente)
-//     const front_3 = cubies.filter(c => c.current_position.z === -1);  // Meio Vertical (Profundidade)
-//     const front_1 = cubies.filter(c => c.current_position.z === 1);     // Traseira (Trás)
-
-//     const clickNormal = new THREE.Vector3();
-//     let mouseDownPos = new THREE.Vector2();
-
-//     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-//     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-//     raycaster.setFromCamera(mouse, camera);
-
-//     const intersects = raycaster.intersectObjects(cubies.map(c => c.model), true);
-
-//     if (intersects.length > 0) {
-//         const intersection = intersects[0];
-//         const hitMesh = intersection.object;
-
-//         const localNormal = intersection.face.normal;
-//         const normalMatrix = new THREE.Matrix3().getNormalMatrix(hitMesh.matrixWorld);
-//         const worldNormal = localNormal.clone().applyMatrix3(normalMatrix).normalize();
-
-//         const faceDirection = {
-//             x: Math.round(worldNormal.x),
-//             y: Math.round(worldNormal.y),
-//             z: Math.round(worldNormal.z)
-//         };
-
-//         // ================================================================
-//         // NOVO: IDENTIFICAR O NOME DA FACE
-//         // ================================================================
-
-
-//         // Guardar para uso posterior
-//         // clickNormal.copy(worldNormal); 
-
-//         // --- Resto da sua lógica de identificação da Piece ---
-//         let currentObject = hitMesh;
-//         while (currentObject.parent && !cubies.find(c => c.model === currentObject)) {
-//             currentObject = currentObject.parent;
-//         }
-
-//         selectedPiece = cubies.find(c => c.model === currentObject);
-
-//         if (selectedPiece) {
-//             // console.log("Peça selecionada:", selectedPiece);
-//             isDragging = true;
-//             mouseDownPos.set(event.clientX, event.clientY);
-//             controls.enabled = false;
-//         }
-
-//         let faceName = "";
-//         let rotationAxis = null;
-//         let piece_x = selectedPiece.current_position.x;
-//         let piece_y = selectedPiece.current_position.y;
-//         let piece_z = selectedPiece.current_position.z;
-
-//         console.log("Posição da peça selecionada:", selectedPiece.current_position);
-
-//         if (faceDirection.x === 1) {
-//             faceName = "Direita (Right)"
-//             rotationAxis = 'x';
-//             if (piece_x === 1 && piece_z === 1) {
-//                 rotateLayer(front_1, true, 'z');
-//             }
-//             if (piece_x === 1 && piece_z === 0) {
-//                 rotateLayer(front_2, true, 'z');
-//             }
-//             if (piece_x === 1 && piece_z === -1) {
-//                 rotateLayer(front_3, true, 'z');
-//             }
-
-//         } else if (faceDirection.x === -1) {
-//             faceName = "Esquerda (Left)";
-//             rotationAxis = 'x';
-//             if (piece_x === -1 && piece_z === 1) {
-//                 rotateLayer(front_1, false, 'z');
-//             }
-//             if (piece_x === -1 && piece_z === 0) {
-//                 rotateLayer(front_2, false, 'z');
-//             }
-//             if (piece_x === -1 && piece_z === -1) {
-//                 rotateLayer(front_3, false, 'z');
-//             }
-//         } 
-
-
-//          if (faceDirection.z === 1) {
-//             faceName = "Fronte (front)";
-//             rotationAxis = 'z';
-//             if (piece_x === 1 && piece_z === 1) {
-//                 rotateLayer(right_1, false, 'x');
-//             }
-//             if (piece_x === 0 && piece_z === 1) {
-//                 rotateLayer(right_2, false, 'x');
-//             }
-//             if (piece_x === -1 && piece_z === 1) {
-//                 rotateLayer(right_3, false, 'x');
-//             }
-//         } else if (faceDirection.z === -1) {
-//             faceName = "Frente (front)";
-//             rotationAxis = 'z';
-//             if (piece_x === 1 && piece_z === -1) {
-//                 rotateLayer(right_1, false, 'x');
-//             }
-//             if (piece_x === 0 && piece_z === -1) {
-//                 rotateLayer(right_2, false, 'x');
-//             }
-//             if (piece_x === -1 && piece_z === -1) {
-//                 rotateLayer(right_3, false, 'x');
-//             }
-//         }
-
-//         if (faceDirection.y === 1) {
-//             faceName = "Topo (Up)";
-//             rotationAxis = 'y';
-//             if (piece_y === 1 && piece_z === 1) {
-//                 rotateLayer(top_1, false, 'y');
-//             }
-//             if (piece_y === 1 && piece_z === 0) {
-//                 rotateLayer(top_2, false, 'y');
-//             }
-//             if (piece_y === 1 && piece_z === -1) {
-//                 rotateLayer(top_3, false, 'y');
-//             }
-//         }
-//         //console.log("=== Impacto Detectado ===");
-//         //console.log("Face identificada:", faceName);
-//         console.log("Eixo dominante:", faceDirection);
-
-
-//     }
-// });
-
-// // --- 3. O EVENTO PARA SOLTAR (mouseup) ---
-// window.addEventListener('mouseup', () => {
-//     // Quando solta o mouse, independente de ter girado ou não:
-//     isDragging = false;
-//     selectedPiece = null;
-
-//     // REATIVA a rotação da câmera
-//     controls.enabled = true;
-//     console.log("Câmera liberada");
-// });
-
 let selectedPiece = null;
 let dragDirection = ""; // Armazena "horizontal" ou "vertical"
 let dragOrientation = 0;  // Armazena o valor bruto (positivo ou negativo) para definir o sentido
@@ -475,6 +252,32 @@ window.addEventListener('mouseup', (event) => {
             if (piece_x === -1 && piece_z === -1) {
                 rotateLayer(front_3, rotationOrientation, 'z');
             }
+        } else if (faceDirection.y === 1) {
+            rotationOrientation = !rotationOrientation;
+            faceName = "Topo (Up)";
+            rotationAxis = 'y';
+            if (piece_y === 1 && piece_x === 1) {
+                rotateLayer(right_1, rotationOrientation, 'x');
+            }
+            if (piece_y === 1 && piece_x === 0) {
+                rotateLayer(right_2, rotationOrientation, 'x');
+            }
+            if (piece_y === 1 && piece_x === -1) {
+                rotateLayer(right_3, rotationOrientation, 'x');
+            }
+        } else if (faceDirection.y === -1) {
+            rotationOrientation = !rotationOrientation;
+            faceName = "Topo (Up)";
+            rotationAxis = 'y';
+            if (piece_y === -1 && piece_x === 1) {
+                rotateLayer(right_1, rotationOrientation, 'x');
+            }
+            if (piece_y === -1 && piece_x === 0) {
+                rotateLayer(right_2, rotationOrientation, 'x');
+            }
+            if (piece_y === -1 && piece_x === -1) {
+                rotateLayer(right_3, rotationOrientation, 'x');
+            }
         } else if (faceDirection.z === 1) {
             rotationOrientation = !rotationOrientation;
             faceName = "Fronte (front)";
@@ -500,13 +303,90 @@ window.addEventListener('mouseup', (event) => {
             if (piece_x === -1 && piece_z === -1) {
                 rotateLayer(right_3, rotationOrientation, 'x');
             }
-        } 
+        }
 
+        //////////// HORINZONTAL /////////////
+    } else if (dragDirection === "horizontal") {
+        if (faceDirection.x === 1) {
+            faceName = "Direita (Right)"
+            rotationAxis = 'x';
+            if (piece_x === 1 && piece_y === 1) {
+                rotateLayer(top_1, rotationOrientation, 'y');
+            }
+            if (piece_x === 1 && piece_y === 0) {
+                rotateLayer(top_2, rotationOrientation, 'y');
+            }
+            if (piece_x === 1 && piece_y === -1) {
+                rotateLayer(top_3, rotationOrientation, 'y');
+            }
+        } else if (faceDirection.x === -1) {
+            faceName = "Direita (Right)"
+            rotationAxis = 'x';
+            if (piece_x === -1 && piece_y === 1) {
+                rotateLayer(top_1, rotationOrientation, 'y');
+            }
+            if (piece_x === -1 && piece_y === 0) {
+                rotateLayer(top_2, rotationOrientation, 'y');
+            }
+            if (piece_x === -1 && piece_y === -1) {
+                rotateLayer(top_3, rotationOrientation, 'y');
+            }
+        }  else if (faceDirection.y === 1) {
+            rotationOrientation = !rotationOrientation;
+            faceName = "Topo (Up)";
+            rotationAxis = 'y';
+            if (piece_y === 1 && piece_z === 1) {
+                rotateLayer(front_1, rotationOrientation, 'z');
+            }
+            if (piece_y === 1 && piece_z === 0) {
+                rotateLayer(front_2, rotationOrientation, 'z');
+            }
+            if (piece_y === 1 && piece_z === -1) {
+                rotateLayer(front_3, rotationOrientation, 'z');
+            }
+        } else if (faceDirection.y === -1) {
+            faceName = "Topo (Up)";
+            rotationAxis = 'y';
+            if (piece_y === -1 && piece_z === 1) {
+                rotateLayer(front_1, rotationOrientation, 'z');
+            }
+            if (piece_y === -1 && piece_z === 0) {
+                rotateLayer(front_2, rotationOrientation, 'z');
+            }
+            if (piece_y === -1 && piece_z === -1) {
+                rotateLayer(front_3, rotationOrientation, 'z');
+            }
+        } else if (faceDirection.z === 1) {
+            faceName = "Fronte <--------";
+            rotationAxis = 'z';
+            if (piece_z === 1 && piece_y === 1) {
+                rotateLayer(top_1, rotationOrientation, 'y');
+            }
+            if (piece_z === 1 && piece_y === 0) {
+                rotateLayer(top_2, rotationOrientation, 'y');
+            }
+            if (piece_z === 1 && piece_y === -1) {
+                rotateLayer(top_3, rotationOrientation, 'y');
+            }
+        } else if (faceDirection.z === -1) {
+            faceName = "Fronte <--------";
+            rotationAxis = 'z';
+            if (piece_z === -1 && piece_y === 1) {
+                rotateLayer(top_1, rotationOrientation, 'y');
+            }
+            if (piece_z === -1 && piece_y === 0) {
+                rotateLayer(top_2, rotationOrientation, 'y');
+            }
+            if (piece_z === -1 && piece_y === -1) {
+                rotateLayer(top_3, rotationOrientation, 'y');
+            }
+        } 
     }
 
     controls.enabled = true;
-    console.log("Câmera liberada");
-    console.log("Face direction:", faceDirection);
+    //console.log(faceName);
+    //console.log("Câmera liberada");
+    //console.log("Face direction:", faceDirection);
     console.log("Posição da peça selecionada:", selectedPiece.current_position);
 
     selectedPiece = null;
