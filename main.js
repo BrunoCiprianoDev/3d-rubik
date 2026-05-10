@@ -360,7 +360,7 @@ function rotateLayer(layerCubies, clockwise = true, axis) {
 
 let selectedPiece = null;
 let dragDirection = ""; // Armazena "horizontal" ou "vertical"
-let dragIntensity = 0;  // Armazena o valor bruto (positivo ou negativo) para definir o sentido
+let dragOrientation = 0;  // Armazena o valor bruto (positivo ou negativo) para definir o sentido
 let mouseDownPos = new THREE.Vector2();
 let faceDirection = null;
 
@@ -432,9 +432,9 @@ window.addEventListener('mouseup', (event) => {
 
         // ARMAZENA POSITIVO OU NEGATIVO (Intensidade)
         // No navegador, deltaY negativo significa que o mouse subiu.
-        dragIntensity = (dragDirection === "horizontal") ? deltaX : -deltaY;
+        dragOrientation = (dragDirection === "horizontal") ? deltaX : -deltaY;
 
-        console.log(`Sentido: ${dragDirection}, Direção: ${dragIntensity}`);
+        console.log(`Sentido: ${dragDirection}, Direção: ${dragOrientation}`);
     }
 
     isDragging = false;
@@ -446,28 +446,71 @@ window.addEventListener('mouseup', (event) => {
     let piece_y = selectedPiece.current_position.y;
     let piece_z = selectedPiece.current_position.z;
 
-    if (faceDirection.x === 1) {
-        faceName = "Direita (Right)"
-        rotationAxis = 'x';
-        if (piece_x === 1 && piece_z === 1) {
-            rotateLayer(front_1, true, 'z');
-        }
-        if (piece_x === 1 && piece_z === 0) {
-            rotateLayer(front_2, true, 'z');
-        }
-        if (piece_x === 1 && piece_z === -1) {
-            rotateLayer(front_3, true, 'z');
-        }
+
+    let rotationOrientation = dragOrientation > 0 ? false : true;
+
+    if (dragDirection === "vertical") {
+        if (faceDirection.x === 1) {
+            faceName = "Direita (Right)"
+            rotationAxis = 'x';
+            if (piece_x === 1 && piece_z === 1) {
+                rotateLayer(front_1, rotationOrientation, 'z');
+            }
+            if (piece_x === 1 && piece_z === 0) {
+                rotateLayer(front_2, rotationOrientation, 'z');
+            }
+            if (piece_x === 1 && piece_z === -1) {
+                rotateLayer(front_3, rotationOrientation, 'z');
+            }
+        } else if (faceDirection.x === -1) {
+            rotationOrientation = !rotationOrientation; // Inverte o sentido para a face oposta
+            faceName = "Esquerda (Left)";
+            rotationAxis = 'x';
+            if (piece_x === -1 && piece_z === 1) {
+                rotateLayer(front_1, rotationOrientation, 'z');
+            }
+            if (piece_x === -1 && piece_z === 0) {
+                rotateLayer(front_2, rotationOrientation, 'z');
+            }
+            if (piece_x === -1 && piece_z === -1) {
+                rotateLayer(front_3, rotationOrientation, 'z');
+            }
+        } else if (faceDirection.z === 1) {
+            rotationOrientation = !rotationOrientation;
+            faceName = "Fronte (front)";
+            rotationAxis = 'z';
+            if (piece_x === 1 && piece_z === 1) {
+                rotateLayer(right_1, rotationOrientation, 'x');
+            }
+            if (piece_x === 0 && piece_z === 1) {
+                rotateLayer(right_2, rotationOrientation, 'x');
+            }
+            if (piece_x === -1 && piece_z === 1) {
+                rotateLayer(right_3, rotationOrientation, 'x');
+            }
+        } else if (faceDirection.z === -1) {
+            faceName = "Frente (front)";
+            rotationAxis = 'z';
+            if (piece_x === 1 && piece_z === -1) {
+                rotateLayer(right_1, rotationOrientation, 'x');
+            }
+            if (piece_x === 0 && piece_z === -1) {
+                rotateLayer(right_2, rotationOrientation, 'x');
+            }
+            if (piece_x === -1 && piece_z === -1) {
+                rotateLayer(right_3, rotationOrientation, 'x');
+            }
+        } 
 
     }
 
-        controls.enabled = true;
-        console.log("Câmera liberada");
-        console.log("Face direction:", faceDirection);
-        console.log("Posição da peça selecionada:", selectedPiece.current_position);
+    controls.enabled = true;
+    console.log("Câmera liberada");
+    console.log("Face direction:", faceDirection);
+    console.log("Posição da peça selecionada:", selectedPiece.current_position);
 
-        selectedPiece = null;
-    });
+    selectedPiece = null;
+});
 
 // --- RENDER LOOP ---
 function animate() {
