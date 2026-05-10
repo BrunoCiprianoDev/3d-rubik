@@ -73,12 +73,11 @@ loader.load('model.glb', (gltf) => {
         }
     }
 
-        console.log(cubies.filter(c => c.current_position.y === 1 ));
 });
- 
+
 // --- FUNÇÕES DE ROTAÇÃO MANUAL (TECLADO) ---
 
-function rotateLayer(layerCubies, clockwise = true) {
+function rotateLayer(layerCubies, clockwise = true, axis) {
     if (isRotating || offset === 0) return;
     isRotating = true;
 
@@ -86,7 +85,7 @@ function rotateLayer(layerCubies, clockwise = true) {
     pivot.rotation.set(0, 0, 0);
     pivot.updateMatrixWorld();
     layerCubies.forEach(c => pivot.attach(c.model));
-
+  
     // 3. DEFINIÇÃO DE SENTIDO
     // Se clockwise for true, gira -90 graus. Se false (anti-horário), gira 90 graus.
     const direction = clockwise ? -1 : 1;
@@ -99,7 +98,7 @@ function rotateLayer(layerCubies, clockwise = true) {
 
         // Usamos Math.abs para a condição de parada funcionar em ambos os sentidos
         if (Math.abs(currentRad) >= Math.PI / 2) {
-            pivot.rotation.x = targetRad;
+            pivot.rotation[axis] = targetRad;
             pivot.updateMatrixWorld();
 
             // 4. LIMPEZA E ARREDONDAMENTO
@@ -119,11 +118,16 @@ function rotateLayer(layerCubies, clockwise = true) {
                     Math.round(c.model.rotation.y / (Math.PI / 2)) * (Math.PI / 2),
                     Math.round(c.model.rotation.z / (Math.PI / 2)) * (Math.PI / 2)
                 );
+
+                // Atualiza a posição atual da peça com base na posição do modelo
+                c.current_position.x = Math.round(c.model.position.x / offset);
+                c.current_position.y = Math.round(c.model.position.y / offset);
+                c.current_position.z = Math.round(c.model.position.z / offset);
             });
 
             isRotating = false;
         } else {
-            pivot.rotation.x += speed;
+            pivot.rotation[axis] += speed;
             requestAnimationFrame(animate);
         }
     }
@@ -136,32 +140,47 @@ function rotateLayer(layerCubies, clockwise = true) {
 window.addEventListener('keydown', (event) => {
 
     // Eixo Y (Camadas Horizontais)
-    const topCubies = cubies.filter(c => c.current_position.y === 0 );      // Superior (Cima)
-    const midHorizCubies = cubies.filter(c => c.current_position.y === -1 ); // Meio Horizontal
-    const bottomCubies = cubies.filter(c => c.current_position.y === -1 );     // Inferior (Baixo)
+    const topCubies = cubies.filter(c => c.current_position.y === 0);      // Superior (Cima)
+    const midHorizCubies = cubies.filter(c => c.current_position.y === -1); // Meio Horizontal
+    const bottomCubies = cubies.filter(c => c.current_position.y === 1);     // Inferior (Baixo)
 
     // Eixo X (Camadas Verticais Laterais)
-    const rightCubies = cubies.filter(c => c.current_position.x === 0 );      // Direita
-    const midVertLatCubies = cubies.filter(c => c.current_position.x === -1 ); // Meio Vertical (Lateral)
-    const leftCubies = cubies.filter(c => c.current_position.x === 1 );     // Esquerda
+    const rightCubies = cubies.filter(c => c.current_position.x === 0);      // Direita
+    const midVertLatCubies = cubies.filter(c => c.current_position.x === -1); // Meio Vertical (Lateral)
+    const leftCubies = cubies.filter(c => c.current_position.x === 1);     // Esquerda
 
     // Eixo Z (Camadas de Profundidade)
-    const frontCubies = cubies.filter(c => c.current_position.z === 0 );      // Frontal (Frente)
-    const midDepthCubies = cubies.filter(c => c.current_position.z === -1 );  // Meio Vertical (Profundidade)
-    const backCubies = cubies.filter(c => c.current_position.z === 1 );     // Traseira (Trás)
+    const frontCubies = cubies.filter(c => c.current_position.z === 0);      // Frontal (Frente)
+    const midDepthCubies = cubies.filter(c => c.current_position.z === -1);  // Meio Vertical (Profundidade)
+    const backCubies = cubies.filter(c => c.current_position.z === 1);     // Traseira (Trás)
 
 
     if (isRotating) return;
 
-    if (event.key === "ArrowDown") {
-        console.log("Seta para baixo: Camada Inferior (Horário)");
-        rotateLayer(leftCubies, true);
+    if (event.key === "1") {
+        rotateLayer(topCubies, true, 'y');
     }
 
-    if (event.key === "ArrowUp") {
-        console.log("Seta para cima: Camada Inferior (Anti-horário)");
-        rotateLayer(midVertLatCubies, false);
+    if (event.key === "2") {
+        rotateLayer(midHorizCubies, true, 'y');
     }
+
+    if (event.key === "3") {
+        rotateLayer(bottomCubies, true, 'y');
+    }
+
+    if (event.key === "4") {
+        rotateLayer(rightCubies, true, 'x');
+    }
+
+    if (event.key === "5") {
+        rotateLayer(midVertLatCubies, true, 'x');
+    }
+
+    if (event.key === "6") {
+        rotateLayer(leftCubies, true, 'x');
+    }
+
 });
 
 
