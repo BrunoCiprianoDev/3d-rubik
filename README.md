@@ -23,6 +23,8 @@ The project uses a 3D model configured with standard Rubik’s Cube colors and r
 3. **Shuffle:** Press the **"S"** key on the keyboard to start the shuffle sequence.
 4. **Objective:** Solve the cube by moving the pieces back to their original positions.
 
+![Image](root/models/rubik-run.png)
+
 ## 💻 Technologies Used
 
 - **Three.js:** Main engine for 3D rendering.
